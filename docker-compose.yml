@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # --- ส่วนของ Backend ---
+  backend:
+    build: ./backend             # path ไปยังโฟลเดอร์ backend
+    container_name: my-backend-api
+    ports:
+      - "3008:3000"              # โจทย์: Host(3008) -> Container(3000)
+    environment:
+      - DB_HOST=${DB_HOST}     # <--- ใส่ IP เครื่อง Server Database ของจริงตรงนี้
+      - DB_USER=${DB_USER}             # ใส่ Username DB
+      - DB_PASSWORD=${DB_PASSWORD}         # ใส่ Password DB
+      - DB_NAME=${DB_NAME}        # ใส่ชื่อ DB
+    restart: always
+
+  # --- ส่วนของ Frontend ---
+  frontend:
+    build: ./frontend            # path ไปยังโฟลเดอร์ frontend
+    container_name: my-frontend-app
+    ports:
+      - "8088:4200"              # โจทย์: Host(8088) -> Container(4200)
+    volumes:
+      - ./frontend/src:/app/src  # (Optional) เพื่อให้แก้โค้ดแล้ว Hot Reload ได้
+    depends_on:
+      - backend                  # ให้รัน backend ก่อน
+    restart: always

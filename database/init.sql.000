@@ -1,0 +1,67 @@
+CREATE DATABASE IF NOT EXISTS kpi_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE kpi_db;
+
+-- 1. ตารางผู้ใช้งาน
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(256) NOT NULL,
+    hospital_name VARCHAR(100),
+    amphoe_name VARCHAR(100),
+    role VARCHAR(20) DEFAULT 'user'
+);
+
+-- เพิ่ม User Admin เริ่มต้น (รหัสผ่าน: 1234)
+INSERT INTO users (username, password_hash, hospital_name, amphoe_name, role) 
+VALUES ('admin', SHA2('1234', 256), 'สสจ. นครราชสีมา', 'เมือง', 'admin');
+
+-- 2. โครงสร้าง KPI
+CREATE TABLE kpi_issues (
+    id INT PRIMARY KEY,
+    name VARCHAR(255)
+);
+
+CREATE TABLE kpi_main_indicators (
+    id INT PRIMARY KEY,
+    issue_id INT,
+    name VARCHAR(255),
+    target_label VARCHAR(50),
+    FOREIGN KEY (issue_id) REFERENCES kpi_issues(id)
+);
+
+CREATE TABLE kpi_sub_activities (
+    id INT PRIMARY KEY,
+    main_ind_id INT,
+    name VARCHAR(255),
+    FOREIGN KEY (main_ind_id) REFERENCES kpi_main_indicators(id)
+);
+
+CREATE TABLE kpi_items (
+    id INT PRIMARY KEY,
+    sub_activity_id INT,
+    name VARCHAR(255),
+    unit VARCHAR(50),
+    target_value VARCHAR(50),
+    FOREIGN KEY (sub_activity_id) REFERENCES kpi_sub_activities(id)
+);
+
+-- 3. ตารางเก็บผลงาน
+CREATE TABLE kpi_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    fiscal_year INT,
+    report_month INT,
+    report_year_ad INT,
+    kpi_id INT,
+    kpi_value FLOAT,
+    recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_rec (user_id, fiscal_year, kpi_id, report_month),
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (kpi_id) REFERENCES kpi_items(id)
+);
+
+-- ข้อมูลตัวอย่าง
+INSERT INTO kpi_issues VALUES (1, '1. เด็กโคราชฉลาด IQ ดี');
+INSERT INTO kpi_main_indicators VALUES (1, 1, '1. เด็ก 0-5 ปี พัฒนาการสมวัย', '85%');
+INSERT INTO kpi_sub_activities VALUES (1, 1, '1.1 คัดกรองพัฒนาการ');
+INSERT INTO kpi_items VALUES (1, 1, 'จำนวนเด็กที่ได้รับการคัดกรอง', 'คน', '100');

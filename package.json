@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "chart.js": "^4.4.1",
+    "jspdf": "^4.1.0",
+    "jspdf-autotable": "^5.0.7",
+    "ng2-charts": "^5.0.0",
+    "sweetalert2": "^11.26.18",
+    "xlsx": "^0.18.5"
+  }
+}
