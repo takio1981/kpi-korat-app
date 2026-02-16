@@ -1,27 +1,24 @@
-# version: '3.8'
-
 services:
-  # --- ส่วนของ Backend ---
+  # --- 1. Backend (ทำงานเบื้องหลัง) ---
   backend:
-    build: ./backend             # path ไปยังโฟลเดอร์ backend
-    container_name: my-backend-api
+    build: ./backend
+    container_name: korat-kpi-app-backend
     ports:
-      - "3008:3000"              # โจทย์: Host(3008) -> Container(3000)
+      - "8809:8809"        # เผื่อไว้ debug แต่จริงๆ ไม่ต้องเปิดก็ได้
     environment:
-      - DB_HOST=${DB_HOST}     # <--- ใส่ IP เครื่อง Server Database ของจริงตรงนี้
-      - DB_USER=${DB_USER}             # ใส่ Username DB
-      - DB_PASSWORD=${DB_PASSWORD}         # ใส่ Password DB
-      - DB_NAME=${DB_NAME}        # ใส่ชื่อ DB
+      - PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
     restart: always
 
-  # --- ส่วนของ Frontend ---
+  # --- 2. Frontend + Nginx (ประตูหน้าบ้าน) ---
   frontend:
-    build: ./frontend            # path ไปยังโฟลเดอร์ frontend
-    container_name: my-frontend-app
+    build: ./frontend
+    container_name: korat-kpi-app-frontend
     ports:
-      - "8088:4200"              # โจทย์: Host(8088) -> Container(80)
-    volumes:
-      - ./frontend/src:/app/src  # (Optional) เพื่อให้แก้โค้ดแล้ว Hot Reload ได้
+      - "8808:80"          # เข้าผ่าน Port 8808 (Host) -> 80 (Container)
     depends_on:
-      - backend                  # ให้รัน backend ก่อน
+      - backend
     restart: always

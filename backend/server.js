@@ -9,11 +9,11 @@ app.use(bodyParser.json());
 
 // ตั้งค่า Database
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || '192.168.5.208',
-    user: process.env.DB_USER || 'kpi_user',
-    password: process.env.DB_PASSWORD || 'kpi_pass',
-    database: process.env.DB_NAME || 'kpi_db',
-    port: process.env.DB_PORT || 3306,
+    host: process.env.DB_HOST || process.env.DB_HOST,
+    user: process.env.DB_USER || process.env.DB_USER,
+    password: process.env.DB_PASSWORD || process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || process.env.DB_NAME,
+    port: process.env.DB_PORT || process.env.DB_PORT,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -329,5 +329,5 @@ app.get('/kpikorat/api/dashboard/district-stats', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
-const PORT = 3000;
+const PORT = 8809;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
