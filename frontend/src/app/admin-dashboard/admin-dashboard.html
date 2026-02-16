@@ -1,0 +1,310 @@
+<div class="p-6 bg-gray-100 min-h-screen font-sarabun">
+    <div class="bg-white rounded shadow p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-teal-800">
+                    <i class="fas fa-chart-pie mr-2 text-teal-600"></i>Admin Dashboard
+                </h1>
+                <p class="text-gray-500">ระบบติดตามและประเมินผลตัวชี้วัด</p>
+            </div>
+            
+            <div class="flex gap-2">               
+
+                <button (click)="switchMode('summary')" 
+                        [class.bg-teal-600]="viewMode === 'summary'" [class.text-white]="viewMode === 'summary'"
+                        [class.bg-gray-200]="viewMode !== 'summary'"
+                        class="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded shadow hover:bg-teal-700 transition font-bold flex items-center">
+                    <i class="fas fa-list mr-2"></i> สรุปรายหน่วยงาน
+                </button>
+                <button (click)="switchMode('detail')" 
+                        [class.bg-teal-600]="viewMode === 'detail'" [class.text-white]="viewMode === 'detail'"
+                        [class.bg-gray-200]="viewMode !== 'detail'"
+                        class="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded shadow hover:bg-teal-700 transition font-bold flex items-center">
+                    <i class="fas fa-table mr-2"></i> รายงานละเอียด
+                </button>
+
+                <button (click)="logout()" class="bg-red-500 text-white px-4 py-2 rounded shadow hover:bg-red-600 ml-4">
+                    <i class="fas fa-sign-out-alt"></i>ออกจากระบบ
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="viewMode === 'summary'" class="animate-fade-in-up">
+            <div id="summary-table" class="bg-white p-4 rounded-lg">
+                <div class="bg-blue-50 p-4 rounded border border-blue-200 mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">ปีงบประมาณ</label>
+                        <select [(ngModel)]="fiscalYear" (change)="loadSummaryData()" class="border rounded px-3 py-2 w-32 cursor-pointer outline-none focus:ring-2 focus:ring-teal-500">
+                            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">อำเภอ</label>
+                        <select [(ngModel)]="selectedAmphoe" (change)="applySummaryFilters()" class="border rounded px-3 py-2 w-48 cursor-pointer outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="ทั้งหมด">-- ทั้งหมด --</option>
+                            <option *ngFor="let a of amphoes" [value]="a">{{ a }}</option>
+                        </select>
+                    </div>
+                    <div class="flex-grow min-w-[200px]">
+                        <label class="block text-sm font-bold text-gray-700 mb-1">ค้นหา</label>
+                        <div class="relative">
+                            <input type="text" [(ngModel)]="searchText" (keyup)="applySummaryFilters()" 
+                                placeholder="ค้นหาหน่วยงาน / รหัส..."
+                                class="border rounded px-3 py-2 w-full pl-10 outline-none focus:ring-2 focus:ring-teal-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <button (click)="exportExcel()" 
+                        class="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded shadow hover:bg-teal-700 transition font-bold flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i> Export Excel
+                </button>
+
+                <div class="overflow-hidden rounded-xl shadow-lg border border-gray-200 bg-white">
+
+                    <!-- <button (click)="exportPdf()" 
+                            class="px-4 py-2 bg-red-500 text-white rounded shadow hover:bg-red-600 transition font-bold flex items-center">
+                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                    </button> -->
+                    <table class="w-full text-sm border-collapse">
+                        <thead class="bg-gradient-to-r from-teal-700 to-teal-600 text-white shadow-md">
+                            <tr>
+                                <th class="p-4 text-left font-semibold tracking-wide w-12">#</th>
+                                <th class="p-4 text-left font-semibold tracking-wide w-28">รหัส</th>
+                                <th class="p-4 text-left font-semibold tracking-wide w-32">อำเภอ</th>
+                                <th class="p-4 text-left font-semibold tracking-wide">หน่วยงาน</th>
+                                <th class="p-4 text-center font-semibold tracking-wide w-24">บันทึกแล้ว</th>
+                                <th class="p-4 text-center font-semibold tracking-wide w-24">ยังไม่บันทึก</th>
+                                <th class="p-4 text-center font-semibold tracking-wide w-32">ความก้าวหน้า</th>
+                                <th class="p-4 text-center font-semibold tracking-wide w-32">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <tr *ngFor="let row of paginatedSummaryData; let i = index" 
+                                class="hover:bg-teal-50 transition duration-150 ease-in-out group">
+                                
+                                <td class="p-4 text-gray-500 font-medium">
+                                    {{ (summaryPage - 1) * summaryLimit + i + 1 }}
+                                </td>
+                                
+                                <td class="p-4">
+                                    <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-300 font-mono text-xs font-bold">
+                                        {{ row.hospcode || row.username }}
+                                    </span>
+                                </td>
+
+                                <td class="p-4 text-gray-700">{{ row.amphoe_name }}</td>
+                                
+                                <td class="p-4 font-bold text-gray-800 group-hover:text-teal-700 transition">
+                                    {{ row.hospital_name }}
+                                    <div class="text-xs text-gray-400 font-normal mt-0.5">
+                                        <i class="far fa-clock mr-1"></i>
+                                        {{ row.last_update ? ('อัปเดต ' + (row.last_update | date:'dd/MM/yy HH:mm')) : 'ยังไม่ดำเนินการ' }}
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-center">
+                                    <span class="text-green-600 font-bold text-lg">{{ row.recorded }}</span>
+                                    <span class="text-gray-400 text-xs ml-1">/ {{ row.total_kpis }}</span>
+                                </td>
+
+                                <td class="p-4 text-center">
+                                    <span *ngIf="row.not_recorded > 0" class="text-red-500 font-bold">{{ row.not_recorded }}</span>
+                                    <span *ngIf="row.not_recorded == 0" class="text-gray-300">-</span>
+                                </td>
+
+                                <td class="p-4 align-middle">
+                                    <div class="flex items-center gap-2">
+                                        <div class="flex-grow bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                                            <div class="h-2.5 rounded-full transition-all duration-500 ease-out"
+                                                [style.width.%]="row.progress"
+                                                [ngClass]="{
+                                                    'bg-red-500': row.progress < 30,
+                                                    'bg-yellow-400': row.progress >= 30 && row.progress < 80,
+                                                    'bg-green-500': row.progress >= 80
+                                                }">
+                                            </div>
+                                        </div>
+                                        <span class="text-xs font-bold w-9 text-right"
+                                            [ngClass]="{
+                                                'text-red-600': row.progress < 30,
+                                                'text-yellow-600': row.progress >= 30 && row.progress < 80,
+                                                'text-green-600': row.progress >= 80
+                                            }">
+                                            {{ row.progress | number:'1.0-0' }}%
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td class="p-4 text-center">
+                                    <button (click)="viewHospitalDashboard(row)"
+                                            class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-full transition shadow-sm border border-blue-200"
+                                            title="ตรวจสอบข้อมูล">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <tr *ngIf="paginatedSummaryData.length === 0">
+                                <td colspan="8" class="p-8 text-center text-gray-500 bg-gray-50">
+                                    <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i><br>
+                                    ไม่พบข้อมูลตามเงื่อนไขที่ค้นหา
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-2 text-right text-xs text-gray-400 hidden print:block">
+                        พิมพ์เมื่อ: {{ currentDate | date:'dd/MM/yyyy HH:mm' }}
+                </div>
+            </div>
+            <div class="flex justify-between items-center mt-4 px-2" *ngIf="filteredSummary.length > 0">
+                <div class="text-sm text-gray-500">
+                    แสดงหน้า <span class="font-bold text-gray-700">{{ summaryPage }}</span> 
+                    จาก <span class="font-bold text-gray-700">{{ totalSummaryPages }}</span> 
+                    (ทั้งหมด {{ filteredSummary.length }} รายการ)
+                </div>
+                <div class="flex gap-2">
+                    <button (click)="changeSummaryPage(summaryPage - 1)" 
+                            [disabled]="summaryPage === 1"
+                            class="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-gray-600">
+                        <i class="fas fa-chevron-left"></i> ก่อนหน้า
+                    </button>
+                    
+                    <div class="hidden md:flex gap-1">
+                        <ng-container *ngFor="let p of [].constructor(totalSummaryPages); let i = index">
+                            <button *ngIf="i + 1 >= summaryPage - 2 && i + 1 <= summaryPage + 2"
+                                    (click)="changeSummaryPage(i + 1)"
+                                    [class.bg-teal-600]="summaryPage === i + 1"
+                                    [class.text-white]="summaryPage === i + 1"
+                                    [class.bg-white]="summaryPage !== i + 1"
+                                    class="w-8 h-8 rounded border shadow-sm hover:bg-gray-100 transition text-sm font-bold">
+                                {{ i + 1 }}
+                            </button>
+                        </ng-container>
+                    </div>
+
+                    <button (click)="changeSummaryPage(summaryPage + 1)" 
+                            [disabled]="summaryPage === totalSummaryPages"
+                            class="px-3 py-1 bg-white border rounded shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-gray-600">
+                        ถัดไป <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="viewMode === 'detail'" class="animate-fade-in-up">
+            <div id="summary-table" class="bg-white p-4 rounded-lg">
+                <div class="bg-blue-50 p-4 rounded border border-blue-200 mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">ปีงบประมาณ</label>
+                        <select [(ngModel)]="fiscalYear" (change)="loadReportData()" class="w-full border rounded px-3 py-2 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">อำเภอ</label>
+                        <select [(ngModel)]="selectedAmphoe" (change)="currentPage=1; loadReportData()" class="w-full border rounded px-3 py-2 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="ทั้งหมด">-- ทั้งหมด --</option>
+                            <option *ngFor="let a of amphoes" [value]="a">{{ a }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">ประเด็น (Issue)</label>
+                        <select [(ngModel)]="selectedIssue" (change)="currentPage=1; loadReportData()" class="w-full border rounded px-3 py-2 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="all">-- ทุกประเด็น --</option>
+                            <option *ngFor="let i of issues" [value]="i.id">{{ i.name }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">ตัวชี้วัด (Item)</label>
+                        <select [(ngModel)]="selectedItem" (change)="currentPage=1; loadReportData()" class="w-full border rounded px-3 py-2 cursor-pointer outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="all">-- ทุกตัวชี้วัด --</option>
+                            <option *ngFor="let it of items" [value]="it.id">{{ it.name }}</option>
+                        </select>
+                    </div>
+                </div>
+                
+            </div>
+
+
+                <button (click)="exportDetailExcel()" 
+                        class="px-4 py-2 bg-gradient-to-r from-teal-600 to-teal-700 text-white rounded shadow hover:bg-teal-700 transition font-bold flex items-center">
+                    <i class="fas fa-file-excel mr-2"></i> Export Excel
+                </button>
+
+            <div class="overflow-x-auto shadow rounded-lg border">
+                <table class="w-full text-sm border-collapse whitespace-nowrap">
+                    <thead class="bg-gradient-to-r from-teal-700 to-teal-600 text-white shadow-md">
+                        <tr>
+                            <th class="p-3 text-left">หน่วยงาน</th>
+                            <th class="p-3 text-left">ประเด็น / ตัวชี้วัดหลัก</th>
+                            <th class="p-3 text-left">รายการ (Item)</th>
+                            <th class="p-3 text-center w-24 bg-yellow-600">เป้าหมาย</th>
+                            <th class="p-3 text-center w-24 bg-green-700">ผลงาน</th>
+                            <th class="p-3 text-center w-20 bg-blue-600">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let row of reportData" class="border-b hover:bg-blue-50 odd:bg-white even:bg-gray-50">
+                            <td class="p-3">
+                                <div class="font-bold text-gray-800">{{ row.hospital_name }}</div>
+                                <div class="text-xs text-gray-500">{{ row.amphoe_name }}</div>
+                            </td>
+                            <td class="p-3 max-w-xs truncate" title="{{ row.issue_name }} > {{ row.main_name }}">
+                                <span class="block font-semibold text-blue-900">{{ row.issue_name }}</span>
+                                <span class="text-xs text-gray-600">{{ row.main_name }}</span>
+                            </td>
+                            <td class="p-3 max-w-xs truncate" title="{{ row.item_name }}">
+                                {{ row.item_name }} <span class="text-xs text-gray-500">({{ row.unit }})</span>
+                            </td>
+                            <td class="p-3 text-center font-bold text-yellow-700 bg-yellow-50">
+                                {{ row.target | number:'1.0-2' }}
+                            </td>
+                            <td class="p-3 text-center font-bold text-green-700 bg-green-50">
+                                {{ row.result | number:'1.0-2' }}
+                            </td>
+                            <td class="p-3 text-center font-bold" 
+                                [class.text-red-600]="getPercentage(row.target, row.result) < 50"
+                                [class.text-green-600]="getPercentage(row.target, row.result) >= 80">
+                                {{ getPercentage(row.target, row.result) | number:'1.2-2' }}%
+                            </td>
+                        </tr>
+                        <tr *ngIf="reportData.length === 0">
+                            <td colspan="6" class="p-8 text-center text-gray-500">ไม่พบข้อมูลตามเงื่อนไข</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex flex-wrap justify-between items-center mt-4 bg-white p-2 rounded border">
+                <div class="flex items-center gap-2 mb-2 sm:mb-0">
+                    <span class="text-sm text-gray-600">แสดงแถว:</span>
+                    <select [(ngModel)]="itemsPerPage" (change)="onLimitChange()" class="border rounded px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-blue-500">
+                        <option *ngFor="let opt of rowsOptions" [value]="opt">{{ opt }}</option>
+                    </select>
+                    <span class="text-sm text-gray-500 ml-2">จากทั้งหมด {{ totalItems }} รายการ</span>
+                </div>
+
+                <div class="flex gap-1">
+                    <button (click)="onPageChange(currentPage - 1)" [disabled]="currentPage === 1"
+                            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    
+                    <span class="px-3 py-1 bg-blue-50 text-blue-800 font-bold border border-blue-200 rounded">
+                        หน้า {{ currentPage }} / {{ totalPages || 1 }}
+                    </span>
+
+                    <button (click)="onPageChange(currentPage + 1)" [disabled]="currentPage === totalPages"
+                            class="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

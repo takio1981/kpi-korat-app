@@ -1,0 +1,16 @@
+# ไม่เอาโฟลเดอร์ dependencies (ไฟล์ขยะที่โหลดใหม่ได้)
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# ไม่เอาไฟล์ build
+dist/
+frontend/dist/
+.angular/
+
+# ไม่เอาไฟล์ log และไฟล์ขยะของระบบ
+*.log
+.DS_Store
+
+# ไม่เอาไฟล์ความลับ (สำคัญมาก!)
+.env

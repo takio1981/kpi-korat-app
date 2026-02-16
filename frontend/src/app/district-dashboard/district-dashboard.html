@@ -1,0 +1,48 @@
+<div class="min-h-screen bg-gray-100 font-sarabun p-6">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-teal-800">
+                    <i class="fas fa-chart-bar mr-2"></i>สรุปผลงานรายอำเภอ
+                </h1>
+                <p class="text-gray-500 text-sm">เปรียบเทียบผลการดำเนินงานแยกตามพื้นที่</p>
+            </div>
+
+            <div class="flex gap-3">
+                <button (click)="goToEntry()" class="px-6 py-2 btn-main flex items-center">
+                    <i class="fas fa-edit mr-2"></i> บันทึกข้อมูล
+                </button>
+                
+                <button (click)="logout()" class="bg-red-500 text-white px-4 py-2 rounded shadow hover:bg-red-600 transition flex items-center font-bold">
+                    <i class="fas fa-sign-out-alt mr-2"></i> ออกจากระบบ
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded border mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">ปีงบประมาณ</label>
+                <select [(ngModel)]="fiscalYear" (change)="loadChartData()" class="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                    <option *ngFor="let y of availableYears" [value]="y">{{ y }}</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">เลือกตัวชี้วัด</label>
+                <select [(ngModel)]="selectedKpi" (change)="loadChartData()" class="w-full border rounded px-3 py-2 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
+                    <option value="all">-- ภาพรวมทั้งหมด (ทุกตัวชี้วัด) --</option>
+                    <option *ngFor="let k of kpiList" [value]="k.id">{{ k.name }}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="relative h-[500px] w-full bg-white p-2 border rounded">
+            <canvas baseChart
+                [data]="barChartData"
+                [options]="barChartOptions"
+                [type]="barChartType">
+            </canvas>
+        </div>
+
+    </div>
+</div>
