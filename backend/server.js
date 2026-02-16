@@ -21,7 +21,7 @@ const pool = mysql.createPool({
 const db = pool.promise();
 
 // --- 1. API Login (ตรงกับ apiLogin ใน code.gs) ---
-app.post('/api/login', async (req, res) => {
+app.post('/kpikorat/api/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         // ใช้ SHA2(?, 256) ตามไฟล์ code.gs
@@ -36,7 +36,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // --- 2. API โครงสร้าง KPI (Logic เดียวกับ code.gs) ---
-app.get('/api/kpi-structure', async (req, res) => {
+app.get('/kpikorat/api/kpi-structure', async (req, res) => {
     try {
         // ดึงข้อมูลโดย Join 4 ตารางเพื่อให้ได้โครงสร้างครบถ้วน
         // สังเกตว่าใน SQL คุณมี field 'issue_no' ด้วย ผมเลยเพิ่มเข้าไปเพื่อให้เรียงลำดับถูกต้อง
@@ -96,7 +96,7 @@ app.get('/api/kpi-structure', async (req, res) => {
 });
 
 // --- 3. API ดึงข้อมูลคะแนน (GetData) ---
-app.get('/api/kpi-data', async (req, res) => {
+app.get('/kpikorat/api/kpi-data', async (req, res) => {
     const { userId, fiscalYear } = req.query;
     try {
         const [rows] = await db.query(
@@ -108,7 +108,7 @@ app.get('/api/kpi-data', async (req, res) => {
 });
 
 // --- 4. API บันทึกข้อมูล (SaveData) ---
-app.post('/api/kpi-data/batch', async (req, res) => {
+app.post('/kpikorat/api/kpi-data/batch', async (req, res) => {
     const { userId, fiscalYear, changes } = req.body;
     const conn = await pool.promise().getConnection();
     try {
@@ -148,7 +148,7 @@ app.post('/api/kpi-data/batch', async (req, res) => {
 });
 
 // --- 5. API สำหรับ Admin: ดึงรายชื่ออำเภอ (เพื่อทำตัวกรอง) ---
-app.get('/api/admin/amphoes', async (req, res) => {
+app.get('/kpikorat/api/admin/amphoes', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT DISTINCT amphoe_name FROM users WHERE role != "admin" ORDER BY amphoe_name');
         res.json({ success: true, data: rows.map(r => r.amphoe_name) });
@@ -156,7 +156,7 @@ app.get('/api/admin/amphoes', async (req, res) => {
 });
 
 // --- 6. API สำหรับ Admin: สรุปภาพรวมการบันทึก (Dashboard) ---
-app.get('/api/admin/summary', async (req, res) => {
+app.get('/kpikorat/api/admin/summary', async (req, res) => {
     const { fiscalYear } = req.query;
     try {
         // 1. หาจำนวน KPI ทั้งหมดที่มีในระบบก่อน (เพื่อเป็นตัวหาร)
@@ -204,7 +204,7 @@ app.get('/api/admin/summary', async (req, res) => {
 });
 
 // --- 7. API ตัวเลือกสำหรับตัวกรอง (Issues & Items) ---
-app.get('/api/admin/kpi-options', async (req, res) => {
+app.get('/kpikorat/api/admin/kpi-options', async (req, res) => {
     try {
         // ดึงรายชื่อประเด็น
         const [issues] = await db.query('SELECT id, name FROM kpi_issues ORDER BY id');
@@ -215,7 +215,7 @@ app.get('/api/admin/kpi-options', async (req, res) => {
 });
 
 // --- 8. API รายงานละเอียด (Detailed Report) พร้อม Pagination ---
-app.get('/api/admin/report', async (req, res) => {
+app.get('/kpikorat/api/admin/report', async (req, res) => {
     const { fiscalYear, amphoe, issueId, itemId, page, limit } = req.query;
     
     const offset = (page - 1) * limit;
@@ -281,7 +281,7 @@ app.get('/api/admin/report', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 // --- 9. API กราฟสรุปผลงานรายอำเภอ ---
-app.get('/api/dashboard/district-stats', async (req, res) => {
+app.get('/kpikorat/api/dashboard/district-stats', async (req, res) => {
     const { fiscalYear, kpiId } = req.query;
     try {
         let kpiFilter = "";

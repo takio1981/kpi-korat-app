@@ -19,7 +19,7 @@ services:
     build: ./frontend            # path ไปยังโฟลเดอร์ frontend
     container_name: my-frontend-app
     ports:
-      - "8088:4200"              # โจทย์: Host(8088) -> Container(4200)
+      - "8088:80"              # โจทย์: Host(8088) -> Container(80)
     volumes:
       - ./frontend/src:/app/src  # (Optional) เพื่อให้แก้โค้ดแล้ว Hot Reload ได้
     depends_on:

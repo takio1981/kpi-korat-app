@@ -38,7 +38,7 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}=================================================${NC}"
     echo -e "${GREEN}   ✔ DEPLOYMENT SUCCESSFUL! (เสร็จสมบูรณ์)       ${NC}"
     echo -e "${GREEN}=================================================${NC}"
-    echo -e "เข้าใช้งานได้ที่: ${YELLOW}http://localhost:8088${NC} (หรือ IP เครื่องนี้)"
+    echo -e "เข้าใช้งานได้ที่: ${YELLOW}http://localhost:420088${NC} (หรือ IP เครื่องนี้)"
     echo -e "ตรวจสอบสถานะ:   ${YELLOW}docker compose ps${NC}"
 else
     echo -e "${RED}✘ ไม่สามารถเริ่มระบบได้${NC}"
