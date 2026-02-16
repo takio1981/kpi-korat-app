@@ -14,7 +14,7 @@ RUN npm install
 COPY . .
 
 # เปิด Port 3000 (Port ภายใน Container)
-EXPOSE 3000
+EXPOSE 3008
 
 # คำสั่งรัน Server
 CMD ["npm", "start"]
