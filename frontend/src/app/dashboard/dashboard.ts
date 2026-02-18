@@ -4,15 +4,16 @@ import { ApiService } from '../services/api';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import Swal from 'sweetalert2'; // Import SweetAlert2
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule, NgChartsModule],
-  templateUrl: './dashboard.html'
+  imports: [CommonModule, FormsModule, HttpClientModule, NgChartsModule, RouterLink, RouterLinkActive],
+  templateUrl: './dashboard.html',
+  styleUrls: ['./dashboard.css']
 })
 export class DashboardComponent implements OnInit {
   kpiStructure: any[] = [];
@@ -40,6 +41,19 @@ export class DashboardComponent implements OnInit {
       legend: { display: true, position: 'bottom' },
     }
   };
+
+// ตัวแปรสำหรับ Filter
+  selectedYear: string = '2569'; // ค่าเริ่มต้น
+  selectedDistrict: string = 'all';
+
+  // ข้อมูลตัวเลือก (ควรดึงจาก API แต่ hardcode ทดสอบก่อนได้)
+  years = ['2567', '2568', '2569'];
+  districts = ['เมืองนครราชสีมา', 'ครบุรี', 'เสิงสาง']; // ⚠️ ใส่ชื่ออำเภอให้ครบ หรือดึงจาก API
+
+  // ข้อมูลสำหรับแสดงผล
+  groupedData: any = {}; // เก็บข้อมูลที่จัดกลุ่มแล้ว
+  objectKeys = Object.keys; // ตัวช่วยสำหรับวนลูปใน HTML
+
   // 2. เช็ค Constructor ต้องมี private cd: ChangeDetectorRef
   constructor(private api: ApiService, private router: Router, private cd: ChangeDetectorRef) {}
 
@@ -70,6 +84,7 @@ export class DashboardComponent implements OnInit {
       console.log('Loading Data for Year:', this.fiscalYear);
 
       this.loadKpiData();
+      this.loadData();
     } else {
       this.router.navigate(['/login']);
     }
@@ -84,6 +99,37 @@ export class DashboardComponent implements OnInit {
       localStorage.removeItem('adminSelectedYear'); // ล้างค่าปีทิ้ง
       this.router.navigate(['/admin-dashboard']);
     }
+  }
+
+  loadData() {
+    this.api.getDashboardSummary(this.selectedYear, this.selectedDistrict).subscribe({
+      next: (res) => {
+        if (res.success) {
+          // แปลงข้อมูลดิบ ให้เป็นกลุ่มตาม "ชื่อประเด็น"
+          this.groupedData = this.groupDataByIssue(res.data);
+        }
+      },
+      error: (err) => console.error('Load Dashboard Failed', err)
+    });
+  }
+
+  // 🛠️ ฟังก์ชันจัดกลุ่มข้อมูล (Helper)
+  groupDataByIssue(data: any[]) {
+    return data.reduce((acc: any, cur: any) => {
+      const issue = cur.issue_name || 'ไม่ระบุประเด็น';
+      if (!acc[issue]) {
+        acc[issue] = [];
+      }
+      acc[issue].push(cur);
+      return acc;
+    }, {});
+  }
+
+  // 🛠️ ฟังก์ชันคำนวณ % ความสำเร็จ
+  calcProgress(target: number, result: number): number {
+    if (!target || target == 0) return 0;
+    let percent = (result / target) * 100;
+    return percent > 100 ? 100 : percent; // ไม่ให้เกิน 100% (แล้วแต่ requirement)
   }
 
   loadKpiData() {

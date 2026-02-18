@@ -20,6 +20,54 @@ const pool = mysql.createPool({
 });
 const db = pool.promise();
 
+app.get('/kpikorat/api/dashboard/summary', async (req, res) => {
+    try {
+        console.log("⚡ Calling Dashboard Summary API (Updated Version)"); // เช็คว่าเรียกตัวใหม่จริงไหม
+        const { fiscal_year, district_id } = req.query;
+
+ // ใช้ SQL นี้เพื่อดึงชื่อตัวชี้วัดตั้งต้นก่อน (Main Indicators) แล้วค่อยเอาผลงานมาแปะ
+        const sql = `
+            SELECT 
+                iss.name AS issue_name,             -- ชื่อประเด็น
+                ind.name AS kpi_name,               -- ชื่อตัวชี้วัด
+                
+                -- คำนวณผลรวม (ถ้าไม่มีข้อมูล ให้เป็น 0)
+                COALESCE(SUM(CASE WHEN r.report_month = 0 THEN r.kpi_value ELSE 0 END), 0) AS total_target,
+                COALESCE(SUM(CASE WHEN r.report_month <> 0 THEN r.kpi_value ELSE 0 END), 0) AS total_result
+
+            FROM kpi_main_indicators ind
+            JOIN kpi_issues iss ON ind.issue_id = iss.id
+            JOIN kpi_items it ON it.id = ind.id
+
+            -- 🟢 เชื่อมกับข้อมูลผลงาน (ใช้ LEFT JOIN เพื่อให้ตัวชี้วัดที่ไม่มียอด ยังโชว์ชื่ออยู่)
+            LEFT JOIN (
+                SELECT rec.kpi_id, rec.kpi_value, rec.report_month
+                FROM kpi_records rec
+                LEFT JOIN users u ON rec.user_id = u.id
+                WHERE rec.fiscal_year = ? 
+                AND (u.amphoe_name = ? OR ? = 'all' OR ? IS NULL)
+            ) r ON it.id = r.kpi_id
+
+            GROUP BY iss.id, ind.id, iss.name, ind.name
+            ORDER BY iss.id ASC, ind.id ASC
+        `;
+
+        // ส่ง Parameter: [ปี, อำเภอ, อำเภอ(เช็ค all), อำเภอ(เผื่อเป็น null)]
+        const [rows] = await db.execute(sql, [
+            fiscal_year || '2569', 
+            district_id || 'all', 
+            district_id || 'all',
+            district_id || 'all'
+        ]);
+        
+        res.json({ success: true, data: rows });
+
+    } catch (error) {
+        console.error('Dashboard Summary Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // --- 1. API Login (ตรงกับ apiLogin ใน code.gs) ---
 app.post('/kpikorat/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -329,5 +377,23 @@ app.get('/kpikorat/api/dashboard/district-stats', async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
+// -------------------------------------------------------------------------
+// ✅ เพิ่ม API ใหม่: สำหรับ Dashboard สรุปผลงาน แยกตามประเด็น
+// -------------------------------------------------------------------------
+app.get('/kpikorat/api/districts', async (req, res) => {
+    try {
+        // ดึงชื่ออำเภอที่ไม่ซ้ำกันจากตาราง users
+        const sql = `SELECT DISTINCT amphoe_name FROM users WHERE amphoe_name IS NOT NULL ORDER BY amphoe_name`;
+        const [rows] = await db.execute(sql);
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error('Get Districts Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+
+
 const PORT = 8809;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

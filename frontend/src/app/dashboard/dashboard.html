@@ -25,6 +25,17 @@
                     class="bg-gray-600 text-white px-4 py-2 rounded shadow hover:bg-gray-700 mr-2 border border-gray-500">
                 <i class="fas fa-arrow-left mr-2"></i> กลับหน้า Admin
             </button>
+
+            <button routerLink="/dashboard-summary" 
+                    routerLinkActive="bg-gray-700"
+                    class="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded shadow hover:bg-gray-50 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                </svg>
+                <span class="font-medium">สรุปผลงาน (Summary)</span>
+            </button>
+
             <button (click)="goToOverview()" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-teal-700 transition flex items-center font-bold">
                 <i class="fas fa-chart-pie mr-2"></i> สรุปผลงานรายอำเภอ
             </button>

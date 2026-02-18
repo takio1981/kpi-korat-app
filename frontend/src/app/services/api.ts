@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -17,5 +17,21 @@ export class ApiService {
   getAdminSummary(year: number, amphoe: string) { return this.http.get(`${this.apiUrl}/admin/summary?fiscalYear=${year}&amphoe=${amphoe}`); }
 // เพิ่มฟังก์ชันสำหรับเรียก URL แบบกำหนดเอง
   get(endpoint: string) { return this.http.get(`${this.apiUrl}/${endpoint}`); }
+
+  getDashboardSummary(year: string, districtId: string) {
+    let params = new HttpParams();
+    if (year) {
+      params = params.set('fiscal_year', year);
+    }
+    if (districtId && districtId !== 'all') {
+      params = params.set('district_id', districtId);
+    }
+      
+    return this.http.get<any>(`${this.apiUrl}/dashboard/summary`, { params });
+  }
+
+  getDistricts() {
+    return this.http.get<any>(`${this.apiUrl}/districts`);
+  }
 
 }
