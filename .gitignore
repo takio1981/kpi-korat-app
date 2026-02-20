@@ -4,8 +4,8 @@ frontend/node_modules/
 backend/node_modules/
 
 # ไม่เอาไฟล์ build
-dist/
-frontend/dist/
+# dist/
+# frontend/dist/
 .angular/
 
 # ไม่เอาไฟล์ log และไฟล์ขยะของระบบ
