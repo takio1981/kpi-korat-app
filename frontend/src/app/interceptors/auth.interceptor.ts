@@ -5,30 +5,25 @@ import { catchError, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // ✅ ในแบบ Functional เราใช้ inject() เพื่อเรียกใช้ Router
   const router = inject(Router);
 
+  // ดักจับการตอบกลับจาก Backend API
   return next(req).pipe(
     catchError((error) => {
       
-      // 🚨 ดักจับ Error 401 (Unauthorized / Token หมดอายุ)
+      // 🚨 ถ้าโดนจับได้ว่า Token หมดอายุ หรือไม่มีสิทธิ์ (401 Unauthorized)
       if (error.status === 401) {
-        console.warn('⚠️ 401 Unauthorized detected inside Functional Interceptor');
-
-        // 1. ล้าง Token
+        
         localStorage.clear();
         sessionStorage.clear();
+        Swal.close(); // ปิด Loading เผื่อค้างอยู่
 
-        // 2. ปิด Loading (ถ้ามี)
-        Swal.close();
-
-        // 3. แจ้งเตือนและดีดออก
         Swal.fire({
-          icon: 'warning',
+          icon: 'error',
           title: 'Session หมดอายุ',
-          text: 'กรุณาเข้าสู่ระบบใหม่',
+          text: 'ความปลอดภัยระบบ: กรุณาเข้าสู่ระบบใหม่อีกครั้ง',
           confirmButtonText: 'ตกลง',
-          allowOutsideClick: false
+          allowOutsideClick: false // บังคับให้กดปุ่มตกลงเท่านั้น
         }).then(() => {
           router.navigate(['/login']);
         });

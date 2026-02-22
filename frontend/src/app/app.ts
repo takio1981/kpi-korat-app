@@ -1,6 +1,8 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router } from '@angular/router';
+import { BnNgIdleService } from 'bn-ng-idle'; // ✅ 1. Import
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-root',
@@ -12,10 +14,39 @@ export class App implements OnInit {
   private timeoutId: any;
   private readonly IDLE_TIMEOUT = 15 * 60 * 1000; // 15 นาที
 
-  constructor(private router: Router) {}
+  constructor(
+    private bnIdle: BnNgIdleService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
-    this.resetTimer();
+    // ✅ 3. เริ่มจับเวลา: 900 วินาที = 15 นาที
+    // (Library ตัวนี้จะฉลาดพอที่จะรีเซ็ตเวลาเองเมื่อเราขยับเมาส์หรือพิมพ์)
+    this.bnIdle.startWatching(900).subscribe((isTimedOut: boolean) => {
+      if (isTimedOut) {
+        if (this.router.url === '/login' || this.router.url === '/') {
+          return; // จบการทำงานตรงนี้ ไม่ไปสั่ง Logout ต่อ
+        }
+        // ถ้าไม่ใช่หน้า Login ค่อยสั่ง Logout
+        this.doLogout();
+      }
+    });
+  }
+
+  doLogout() {
+    // เคลียร์ข้อมูลทั้งหมด
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // ดีดไปหน้า Login พร้อมแจ้งเตือน
+    this.router.navigate(['/login']).then(() => {
+      Swal.fire({
+        icon: 'info',
+        title: 'หมดเวลาการใช้งาน',
+        text: 'ระบบออกจากระบบอัตโนมัติเนื่องจากไม่มีการใช้งาน',
+        confirmButtonText: 'ตกลง'
+      });
+    });
   }
 
   @HostListener('window:mousemove') 
