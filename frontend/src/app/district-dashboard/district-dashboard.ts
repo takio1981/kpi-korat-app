@@ -6,6 +6,7 @@ import { NgChartsModule, BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
 import { ApiService } from '../services/api';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-district-dashboard',
@@ -108,8 +109,31 @@ export class DistrictDashboardComponent implements OnInit {
     this.router.navigate(['/dashboard']); // ไปหน้าบันทึก
   }
   
-  logout() {
-    localStorage.removeItem('currentUser');
-    this.router.navigate(['/login']);
+logout() {
+    Swal.fire({
+      title: 'ยืนยันการออกจากระบบ?',
+      text: 'คุณต้องการออกจากระบบใช่หรือไม่?',
+      icon: 'question', // ใช้ไอคอนคำถาม (หรือ 'warning' ก็ได้)
+      showCancelButton: true, // เปิดปุ่มยกเลิก
+      confirmButtonColor: '#d33', // สีปุ่มยืนยัน (สีแดง)
+      cancelButtonColor: '#3085d6', // สีปุ่มยกเลิก (สีน้ำเงิน)
+      confirmButtonText: 'ใช่, ออกจากระบบ',
+      cancelButtonText: 'ยกเลิก',
+      reverseButtons: true // สลับฝั่งปุ่มให้ ยกเลิก อยู่ซ้าย ยืนยัน อยู่ขวา (Optional)
+    }).then((result) => {
+      
+      // ถ้าผู้ใช้กดปุ่ม "ใช่, ออกจากระบบ"
+      if (result.isConfirmed) {
+        
+        // 1. ล้างข้อมูลในเครื่อง
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // 2. เด้งกลับไปหน้า Login
+        this.router.navigate(['/login']);
+        
+      }
+      // ถ้ากดยกเลิก Popup จะปิดไปเองโดยไม่ต้องเขียนโค้ดเพิ่มครับ
+    });
   }
 }
